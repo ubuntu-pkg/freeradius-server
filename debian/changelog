@@ -1,6 +1,7 @@
-freeradius (2.2.9-ppa1~xenial) xenial; urgency=medium
+freeradius (2.2.9-ppa1~trusty3) trusty; urgency=medium
 
-  * Rebuild for xenial
+  * Rebuild for 14.04.5
+  * Build fix (trusty): libtool-bin | libtool
 
  -- Fajar A. Nugraha <ubuntu-ppa@fajar.net>  Sat, 03 Dec 2016 10:35:00 +0700
 
