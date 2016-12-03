@@ -1,3 +1,9 @@
+freeradius (2.2.9-ppa1~xenial) xenial; urgency=medium
+
+  * Rebuild for xenial
+
+ -- Fajar A. Nugraha <ubuntu-ppa@fajar.net>  Sat, 03 Dec 2016 10:35:00 +0700
+
 freeradius (2.2.9-ppa1~wily) wily; urgency=low
 
   * New upstream version
