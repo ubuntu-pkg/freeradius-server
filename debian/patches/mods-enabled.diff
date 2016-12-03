@@ -1,0 +1,23 @@
+diff --git a/raddb/radiusd.conf.in b/raddb/radiusd.conf.in
+index a993ef7..d97cf59 100644
+--- a/raddb/radiusd.conf.in
++++ b/raddb/radiusd.conf.in
+@@ -722,7 +722,17 @@ modules {
+ 	#  referenced in a processing section, such as authorize,
+ 	#  authenticate, accounting, pre/post-proxy, etc.
+ 	#
+-	$INCLUDE ${confdir}/modules/
++	#  In this PPA package, modules in mods-enabled/ are loaded 
++	#  by default to mirror 3.x behaviour. These files are symlink 
++	#  to mods-available/*, and mods-available directory itself 
++	#  is a symlink to modules. This change allows selecting 2.x or 3.x
++	#  module loading behavior simply by changing the following line 
++	#
++	#  To get 2.x behavior, uncomment this line
++#	$INCLUDE ${confdir}/modules/
++	#
++	#  while to get 3.x behavior, uncomment this line
++	$INCLUDE ${confdir}/mods-enabled/
+ 
+ 	#  Extensible Authentication Protocol
+ 	#

@@ -1,0 +1,198 @@
+diff --git a/raddb/policy.conf b/raddb/policy.conf
+index 7eeb25a..d2fe3cf 100644
+--- a/raddb/policy.conf
++++ b/raddb/policy.conf
+@@ -260,6 +260,9 @@ policy {
+ 
+ 		#  Do some minor hacks to the request so that it looks
+ 		#  like a RADIUS request to the SQL IP Pool module.
++		update control {
++			Pool-Name = "DHCP-default"
++		}
+ 		update request {
+ 			User-Name = "DHCP-%{DHCP-Client-Hardware-Address}"
+ 			Calling-Station-Id = "%{DHCP-Client-Hardware-Address}"
+diff --git a/raddb/radiusd.conf.in b/raddb/radiusd.conf.in
+index a993ef7..5de55a3 100644
+--- a/raddb/radiusd.conf.in
++++ b/raddb/radiusd.conf.in
+@@ -164,6 +164,8 @@ pidfile = ${run_dir}/${name}.pid
+ #  It will join all groups where "user" is a member.  This can allow
+ #  for some finer-grained access controls.
+ #
++#  If you use DHCP server functionality, you need to set user = root
++#
+ user = freerad
+ group = freerad
+ 
+diff --git a/raddb/sites-available/dhcp b/raddb/sites-available/dhcp
+index 14831ad..984af8d 100644
+--- a/raddb/sites-available/dhcp
++++ b/raddb/sites-available/dhcp
+@@ -9,18 +9,27 @@
+ #	production system.  It is intended for validation and
+ #	experimentation ONLY.
+ #
+-#	In order for this to work, you will need to run configure:
+-#
+-#		$ ./configure --with-dhcp
+-#		$ make
+-#		$ vi share/dictionary
+-#
+-#	## Un-comment the line containing $INCLUDE dictionary.dhcp
+-#	## Then, save the file.
+-#
+-#		$ make install
+-#
+-#	DHCP is NOT enabled by default.
++#	In order for this to work, you will need to:
++#   * Compile freeradius with DHCP functionality (this PPA package 
++#     already did that).
++#   * Make sure freeradius-mysql package is installed.
++#   * Edit radiusd.conf.
++#     * Make sure "user = root". Needed for arp updates to work.
++#     * Uncomment the line $INCLUDE sql.conf.
++#   * Edit sql.conf, adjust as needed,
++#   * Edit mods-available/dhcp_sqlippool, uncomment the line
++#     $INCLUDE ${confdir}/sql/mysql/ippool-dhcp.conf.
++#   * Create sqlippool table, if you haven't done so already.
++#       * Import the schema (see sql/mysql/ipool.sql).
++#       * Populate the records. At minimum each row must have
++#         Framed-IP-Address and Pool-Name = 'DHCP-default' (or whatever
++#         you set 'Pool-Name' to on policy.conf).
++#       * If you want to use static IP allocation, create a row on  
++#         radippol table with 'callingstationid' set to client's MAC 
++#         address (e.g. '00:16:3E:02:15:6B') and expiry time far in the 
++#         future (e.g. '3000-01-01 00:00:00').
++#   * Create a symlink to ../sites-available/dhcp on 
++#     sites/enabled.
+ #
+ #	The goal of this effort is to get the code in front of
+ #	people who are interested in another DHCP server.
+@@ -96,10 +105,18 @@ server dhcp {
+ 
+ 	#  So that we only specify these values once, and then
+ 	#  use them in all of the listen sections.
++	#  Use loopback interface and port=6700 for testing purposes
+ 	port = 6700
+ 	ipaddr = 127.0.0.1
+ 	interface = lo0
+ 
++	#  If you want to use this on a Linux server for production or on a
++	#  virtual test environment, use these settings instead
++	#port = 67
++	#  Change this to your server's IP address
++	#ipaddr = 172.16.101.2
++	#interface = eth0
++
+ 	#  When the machine is not Linux, or has only one network
+ 	#  interface, use the following listener.  It receives
+ 	#  broadcast *and* unicast packets.
+@@ -123,11 +140,11 @@ server dhcp {
+ 	# the following two listeners instead of the one above.
+ 
+ 	#  Listen for broadcasts on a specific interface.
+-	listen {
+-		type = dhcp
+-		ipaddr = 255.255.255.255
+-		port = ${..port}
+-		interface = ${..interface}
++	#listen {
++	#	type = dhcp
++	#	ipaddr = 255.255.255.255
++	#	port = ${..port}
++	#	interface = ${..interface}
+ 
+ 		#
+ 		#  The source IP for unicast packets is chosen from the first
+@@ -142,8 +159,8 @@ server dhcp {
+ 		#  For now, use the parent's "ipaddr", not the one
+ 		#  in this listen section
+ 		#
+-                src_ipaddr = ${..ipaddr}
+-	}
++    #            src_ipaddr = ${..ipaddr}
++	#}
+ 
+ 	#  Listen for unicasts on an IP, but not bound to any interface.
+ 	#  This allows Linux systems to receive packets on interface X
+@@ -152,10 +169,10 @@ server dhcp {
+ 	#  Then, define which interface the packets go out of, via
+ 	#  "src_interface".  This means that the outbound packets
+ 	#  get sent via the correct interface.
+-	listen {
+-		type = dhcp
+-		ipaddr = ${..ipaddr}
+-		port = ${..port}
++	#listen {
++	#	type = dhcp
++	#	ipaddr = ${..ipaddr}
++	#	port = ${..port}
+ 
+ 		#
+ 		#  When sending unicast responses, this interface is
+@@ -174,8 +191,8 @@ server dhcp {
+ 		#  to update the ARP table.  Or, it must have the
+ 		#  apropriate capabilities added to it after it starts up.
+ 		#
+-		src_interface = ${..interface}
+-	}
++	#	src_interface = ${..interface}
++	#}
+ 
+ #  Packets received on the socket will be processed through one
+ #  of the following sections, named after the DHCP packet type.
+@@ -187,12 +204,12 @@ dhcp DHCP-Discover {
+ 
+ 	#  The contents here are invented.  Change them!
+ 	update reply {
+-	        DHCP-Domain-Name-Server = 127.0.0.1
+-	        DHCP-Domain-Name-Server = 127.0.0.2
++		DHCP-Domain-Name-Server = 8.8.8.8
++		DHCP-Domain-Name-Server += 8.8.4.4
+ 		DHCP-Subnet-Mask = 255.255.255.0
+-		DHCP-Router-Address = 192.168.1.1
+-		DHCP-IP-Address-Lease-Time = 86400
+-		DHCP-DHCP-Server-Identifier = 192.168.1.1
++		DHCP-Router-Address = 172.16.101.1
++		DHCP-IP-Address-Lease-Time = 7200
++		DHCP-DHCP-Server-Identifier = 172.16.101.2
+ 	}
+ 
+ 	#  Do a simple mapping of MAC to assigned IP.
+@@ -210,7 +227,7 @@ dhcp DHCP-Discover {
+ 	#}
+ 
+ 	#  Or, allocate IPs from the DHCP pool in SQL.
+-#	dhcp_sqlippool
++	dhcp_sqlippool.postauth
+ 
+ 	ok
+ }
+@@ -222,12 +239,12 @@ dhcp DHCP-Request {
+ 
+ 	#  The contents here are invented.  Change them!
+ 	update reply {
+-	        DHCP-Domain-Name-Server = 127.0.0.1
+-	        DHCP-Domain-Name-Server = 127.0.0.2
++		DHCP-Domain-Name-Server = 8.8.8.8
++		DHCP-Domain-Name-Server += 8.8.4.4
+ 		DHCP-Subnet-Mask = 255.255.255.0
+-		DHCP-Router-Address = 192.168.1.1
+-		DHCP-IP-Address-Lease-Time = 86400
+-		DHCP-DHCP-Server-Identifier = 192.168.1.1
++		DHCP-Router-Address = 172.16.101.1
++		DHCP-IP-Address-Lease-Time = 7200
++		DHCP-DHCP-Server-Identifier = 172.16.101.2
+ 	}
+ 
+ 	#  Do a simple mapping of MAC to assigned IP.
+@@ -245,7 +262,7 @@ dhcp DHCP-Request {
+ 	#}
+ 
+ 	#  Or, allocate IPs from the DHCP pool in SQL.
+-#	dhcp_sqlippool
++	dhcp_sqlippool.postauth
+ 
+ 	ok
+ }

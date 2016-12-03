@@ -1,6 +1,6 @@
 --- old/Make.inc.in
 +++ new/Make.inc.in
-@@ -48,7 +48,7 @@
+@@ -50,7 +50,7 @@
  
  LOGDIR		= ${logdir}
  RADDBDIR	= ${raddbdir}
@@ -8,7 +8,7 @@
 +RUNDIR		= ${localstatedir}/run/freeradius
  SBINDIR		= ${sbindir}
  RADIR		= ${radacctdir}
- 
+ LIBRADIUS	= $(top_builddir)/src/lib/$(LIBPREFIX)freeradius-radius.la
 --- old/raddb/radiusd.conf.in
 +++ new/raddb/radiusd.conf.in
 @@ -62,7 +62,7 @@
@@ -29,7 +29,7 @@
 +user = freerad
 +group = freerad
 
- #  max_request_time: The maximum time (in seconds) to handle a request.
+ #  panic_action: Command to execute if the server dies unexpectedly.
  #
 --- a/scripts/freeradius.monitrc
 +++ b/scripts/freeradius.monitrc
@@ -46,5 +46,3 @@
     if failed host 127.0.0.1 port 1812 type udp protocol radius secret testing123 then alert
     if failed host 127.0.0.1 port 1813 type udp protocol radius secret testing123 then alert
     if cpu > 95% for 2 cycles then alert
-
-

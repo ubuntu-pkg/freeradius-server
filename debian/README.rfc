@@ -151,6 +151,8 @@ rfc2869	Acct-Interim-Interval
 rfc2869	NAS-Port-Id
 rfc2869	Framed-Pool
 rfc2924	ITU-T
+rfc3079	MS-CHAP
+rfc3079	EAP-TLS
 rfc3162	NAS-IPv6-Address
 rfc3162	Framed-Interface-Id
 rfc3162	Framed-IPv6-Prefix
@@ -214,7 +216,6 @@ rfc5247	Lower-Layer
 rfc5247	Parent-Child
 rfc5247	Denial-of-Service
 rfc5281	EAP-TTLS
-rfc5281	MS-CHAP
 rfc5281	MS-CHAP-V2
 rfc5281	Session-Id
 rfc5281	Peer-Id
@@ -227,3 +228,15 @@ rfc5580	Basic-Location-Policy-Rules
 rfc5580	Extended-Location-Policy-Rules
 rfc5580	Location-Capable
 rfc5580	Requested-Location-Info
+rfc5607	Framed-Management-Protocol
+rfc5607	Management-Transport-Protection
+rfc5607	Management-Policy-Id
+rfc5607	Management-Privilege-Level
+rfc5904	PKM-SS-Cert
+rfc5904	PKM-CA-Cert
+rfc5904	PKM-Config-Settings
+rfc5904	PKM-Cryptosuite-List
+rfc5904	PKM-SAID
+rfc5904	PKM-SA-Descriptor
+rfc5904	PKM-AUTH-Key
+rfc5904	AUTH-Key

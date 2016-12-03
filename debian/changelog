@@ -1,34 +1,32 @@
-freeradius (2.2.10+git) unstable; urgency=medium
+freeradius (2.2.9-ppa1~wily) wily; urgency=low
 
-  * New upstream version.
+  * New upstream version
 
- -- Alan DeKok <aland@freeradius.org>  Mon, 05 Oct 2014 14:07:00 -0400
+ -- Fajar A. Nugraha <ubuntu-ppa@fajar.net>  Fri, 02 Oct 2015 13:57:00 +0700
 
-freeradius (2.2.9+git) unstable; urgency=medium
+freeradius (2.2.8-ppa2~trusty) trusty; urgency=low
 
-  * New upstream version.
+  * Add requirement for dh-autoreconf and libtool-bin (needed since vivid)
+  * Add freeradius_add_iodbc_include_dirs.diff from ubuntu
 
- -- Alan DeKok <aland@freeradius.org>  Wed, 16 April 2014 14:07:00 -0400
+ -- Fajar A. Nugraha <ubuntu-ppa@fajar.net>  Mon, 28 Sep 2015 15:07:00 +0700
 
-freeradius (2.2.8+git) unstable; urgency=medium
+freeradius (2.2.8-ppa1~trusty) trusty; urgency=low
 
-  * New upstream version.
+  * New upstream version
+  * Disable openssl version check thru configure switch
+    allow_vulnerable_openssl config line is ignored
 
- -- Arran Cudbard-Bell <a.cudbardb@freeradius.org>  Thu, 30 April 2014 11:35:00 +0100
+ -- Fajar A. Nugraha <ubuntu-ppa@fajar.net>  Fri, 24 Sep 2015 15:14:00 +0700
 
-freeradius (2.2.7+git) unstable; urgency=medium
+freeradius (2.2.5-ppa1~trusty) trusty; urgency=low
 
-  * New upstream version.
+  * Merge new upstream version
+  * Adapted for stable ppa
 
- -- Arran Cudbard-Bell <a.cudbardb@freeradius.org>  Tue, 18 Nov 2014 11:35:00 +0100
+ -- Fajar A. Nugraha <ubuntu-ppa@fajar.net>  Sat, 17 May 2014 17:16:00 +0700
 
-freeradius (2.2.6+git) unstable; urgency=medium
-
-  * New upstream version.
-
- -- Arran Cudbard-Bell <a.cudbardb@freeradius.org>  Tue, 18 Nov 2014 11:34:00 +0100
-
-freeradius (2.2.5+git) unstable; urgency=medium
+freeradius (2.2.5) unstable; urgency=medium
 
   * New upstream version.
 

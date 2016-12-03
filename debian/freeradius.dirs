@@ -1,5 +1,6 @@
 etc/freeradius/certs
 etc/freeradius/sites-enabled
 etc/freeradius/sites-available
+etc/freeradius/mods-enabled
 usr/lib/freeradius
 var/log/freeradius

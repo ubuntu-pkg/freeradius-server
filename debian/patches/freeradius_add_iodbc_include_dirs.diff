@@ -1,0 +1,28 @@
+Patch to add include directories from  Maximiliano Curia                                         
+
+Index: freeradius-2.1.12+dfsg/src/modules/rlm_sql/drivers/rlm_sql_iodbc/configure.in
+===================================================================
+--- freeradius-2.1.12+dfsg.orig/src/modules/rlm_sql/drivers/rlm_sql_iodbc/configure.in	2013-06-07 14:47:15.972218704 +0200
++++ freeradius-2.1.12+dfsg/src/modules/rlm_sql/drivers/rlm_sql_iodbc/configure.in	2013-06-07 14:47:15.940220007 +0200
+@@ -64,7 +64,7 @@
+ 	fi
+ 
+ 	dnl Check for isql.h
+-	smart_try_dir="$iodbc_include_dir /usr/local/iodbc/include"
++	smart_try_dir="$iodbc_include_dir /usr/include/iodbc /usr/local/iodbc/include"
+ 	FR_SMART_CHECK_INCLUDE(isql.h)
+ 	if test "x$ac_cv_header_isql_h" != xyes; then
+ 		fail="$fail isql.h"
+Index: freeradius-2.1.12+dfsg/src/modules/rlm_sql/drivers/rlm_sql_iodbc/configure
+===================================================================
+--- freeradius-2.1.12+dfsg.orig/src/modules/rlm_sql/drivers/rlm_sql_iodbc/configure	2013-06-07 14:47:05.984625299 +0200
++++ freeradius-2.1.12+dfsg/src/modules/rlm_sql/drivers/rlm_sql_iodbc/configure	2013-06-07 14:47:53.154705108 +0200
+@@ -2862,7 +2862,7 @@
+ 		fail="$fail libiodbc"
+ 	fi
+ 
+-		smart_try_dir="$iodbc_include_dir /usr/local/iodbc/include"
++		smart_try_dir="$iodbc_include_dir /usr/include/iodbc /usr/local/iodbc/include"
+ 
+ 
+ ac_safe=`echo "isql.h" | sed 'y%./+-%__pm%'`

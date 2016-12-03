@@ -1,0 +1,9 @@
+usr/lib/freeradius/rlm_caching*.so
+usr/lib/freeradius/rlm_cram*.so
+usr/lib/freeradius/rlm_example*.so
+usr/lib/freeradius/rlm_jradius*.so
+usr/lib/freeradius/rlm_protocol_filter*.so
+usr/lib/freeradius/rlm_sim_files*.so
+usr/lib/freeradius/rlm_smsotp*.so
+usr/lib/freeradius/rlm_sql_sqlite*.so
+usr/lib/freeradius/rlm_sqlhpwippool*.so

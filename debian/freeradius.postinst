@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 set -e
 
@@ -119,6 +119,23 @@ case "$1" in
               ln -s ../sites-available/$site /etc/freeradius/sites-enabled/$site
             fi
           done
+        fi
+
+        # Create links for default modules, but only if this is an initial
+        # install or an upgrade from before there were links; users may
+        # want to remove them...
+        if [ -z "$2" ] || dpkg --compare-versions "$2" lt 2.2.0+dfsg; then
+          if [ ! -e /etc/freeradius/mods-available ]; then
+            ln -s modules /etc/freeradius/mods-available
+          fi
+          CWD=$(pwd)
+          cd /etc/freeradius/mods-available
+          for mod in *; do
+            if [ ! -e /etc/freeradius/mods-enabled/$mod -a "$mod" = "${mod%.dpkg-*}" ]; then
+              ln -s ../mods-available/$mod /etc/freeradius/mods-enabled/$mod
+            fi
+          done
+          cd $CWD
         fi
 
 	# Create stub SSL certificate file that became necessary in 2.1.8,

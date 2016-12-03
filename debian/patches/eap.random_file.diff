@@ -1,0 +1,11 @@
+--- freeradius-2.1.10+dfsg/raddb/eap.conf~	2010-09-28 13:03:56.000000000 +0200
++++ freeradius-2.1.10+dfsg/raddb/eap.conf	2010-10-14 22:16:08.000000000 +0200
+@@ -204,7 +204,7 @@
+ 			#  write to files in its configuration
+ 			#  directory.
+ 			#
+-#			random_file = ${certdir}/random
++			random_file = /dev/urandom
+ 
+ 			#
+ 			#  This can never exceed the size of a RADIUS

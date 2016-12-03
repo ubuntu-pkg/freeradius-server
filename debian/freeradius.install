@@ -11,6 +11,7 @@ etc/freeradius/hints
 etc/freeradius/huntgroups
 etc/freeradius/ldap.attrmap
 etc/freeradius/modules/*
+etc/freeradius/mods-enabled
 etc/freeradius/policy.conf
 etc/freeradius/policy.txt
 etc/freeradius/preproxy_users
