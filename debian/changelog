@@ -1,4 +1,11 @@
-freeradius (3.0.15+git) unstable; urgency=medium
+freeradius (3.0.15-ppa1~xenial) xenial; urgency=medium
+
+  * Merge new upstream version
+  * Update changelog for ppa
+
+ -- Fajar A. Nugraha <ubuntu-ppa@fajar.net>  Fri, 28 Jul 2017 13:23:00 +0700
+
+freeradius (3.0.15) unstable; urgency=medium
 
   * New upstream version.
 
