@@ -29,12 +29,19 @@ RCSID("$Id$")
 
 #define LOG_PREFIX "rlm_python - "
 
+#include "config.h"
 #include <freeradius-devel/radiusd.h>
 #include <freeradius-devel/modules.h>
 #include <freeradius-devel/rad_assert.h>
 
 #include <Python.h>
 #include <dlfcn.h>
+#ifdef HAVE_DL_ITERATE_PHDR
+#include <link.h>
+#endif
+
+#define LIBPYTHON_LINKER_NAME \
+	"libpython" STRINGIFY(PY_MAJOR_VERSION) "." STRINGIFY(PY_MINOR_VERSION) ".so"
 
 static uint32_t		python_instances = 0;
 static void		*python_dlhandle;
@@ -60,6 +67,11 @@ typedef struct rlm_python_t {
 	char const	*name;			//!< Name of the module instance
 	PyThreadState	*sub_interpreter;	//!< The main interpreter/thread used for this instance.
 	char const	*python_path;		//!< Path to search for python files in.
+
+#if PY_VERSION_HEX > 0x03050000
+	wchar_t		*wide_name;		//!< Special wide char encoding of radiusd name.
+	wchar_t		*wide_path;		//!< Special wide char encoding of radiusd path.
+#endif
 	PyObject	*module;		//!< Local, interpreter specific module, containing
 						//!< FreeRADIUS functions.
 	bool		cext_compat;		//!< Whether or not to create sub-interpreters per module
@@ -768,6 +780,68 @@ static void python_parse_config(CONF_SECTION *cs, int lvl, PyObject *dict)
 	DEBUG("%*s}", indent_section, " ");
 }
 
+#ifdef HAVE_DL_ITERATE_PHDR
+static int dlopen_libpython_cb(struct dl_phdr_info *info,
+					UNUSED size_t size, void *data)
+{
+	const char *pattern = "/" LIBPYTHON_LINKER_NAME;
+	char **ppath = (char **)data;
+
+	if (strstr(info->dlpi_name, pattern) != NULL) {
+		if (*ppath != NULL) {
+			talloc_free(*ppath);
+			*ppath = NULL;
+			return EEXIST;
+		} else {
+			*ppath = talloc_strdup(NULL, info->dlpi_name);
+			if (*ppath == NULL) {
+				return errno;
+			}
+		}
+	}
+	return 0;
+}
+
+/* Dlopen the already linked libpython */
+static void *dlopen_libpython(int flags)
+{
+	char *path = NULL;
+	int rc;
+	void *handle;
+
+	/* Find the linked libpython path */
+	rc = dl_iterate_phdr(dlopen_libpython_cb, &path);
+	if (rc != 0) {
+		WARN("Failed searching for libpython "
+			"among linked libraries: %s", strerror(rc));
+		return NULL;
+	} else if (path == NULL) {
+		WARN("Libpython is not found among linked libraries");
+		return NULL;
+	}
+
+	/* Dlopen the found library */
+	handle = dlopen(path, flags);
+	if (handle == NULL) {
+		WARN("Failed loading %s: %s", path, dlerror());
+	}
+	talloc_free(path);
+	return handle;
+}
+#else	/* ! HAVE_DL_ITERATE_PHDR */
+/* Dlopen libpython by its linker name (bare soname) */
+static void *dlopen_libpython(int flags)
+{
+	const char *name = LIBPYTHON_LINKER_NAME;
+	void *handle;
+	handle = dlopen(name, flags);
+	if (handle == NULL) {
+		WARN("Failed loading %s: %s", name, dlerror());
+	}
+	return handle;
+}
+#endif	/* ! HAVE_DL_ITERATE_PHDR */
+
 /** Initialises a separate python interpreter for this module instance
  *
  */
@@ -781,25 +855,20 @@ static int python_interpreter_init(rlm_python_t *inst, CONF_SECTION *conf)
 	if (python_instances == 0) {
 		INFO("Python version: %s", Py_GetVersion());
 
-		python_dlhandle = dlopen("libpython" STRINGIFY(PY_MAJOR_VERSION) "." STRINGIFY(PY_MINOR_VERSION) ".so",
-					 RTLD_NOW | RTLD_GLOBAL);
-		if (!python_dlhandle) WARN("Failed loading libpython symbols into global symbol table: %s", dlerror());
+		python_dlhandle = dlopen_libpython(RTLD_NOW | RTLD_GLOBAL);
+		if (!python_dlhandle) WARN("Failed loading libpython symbols into global symbol table");
 
 #if PY_VERSION_HEX > 0x03050000
 		{
-			wchar_t *name;
-
-			wide_name = Py_DecodeLocale(main_config.name, strlen(main_config.name));
+			inst->wide_name = Py_DecodeLocale(main_config.name, strlen(main_config.name));
 			Py_SetProgramName(name);		/* The value of argv[0] as a wide char string */
-			PyMem_RawFree(name);
 		}
 #else
 		{
 			char *name;
 
-			name = talloc_strdup(NULL, main_config.name);
+			memcpy(&name, &main_config.name, sizeof(name));
 			Py_SetProgramName(name);		/* The value of argv[0] as a wide char string */
-			talloc_free(name);
 		}
 #endif
 
@@ -835,23 +904,23 @@ static int python_interpreter_init(rlm_python_t *inst, CONF_SECTION *conf)
 
 		/*
 		 *	Set the python search path
+		 *
+		 *	The path buffer does not appear to be dup'd
+		 *	so its lifetime should really be bound to
+		 *	the lifetime of the module.
 		 */
 		if (inst->python_path) {
 #if PY_VERSION_HEX > 0x03050000
 			{
-				wchar_t *name;
-
-				path = Py_DecodeLocale(inst->python_path, strlen(inst->python_path));
+				inst->wide_path = Py_DecodeLocale(inst->python_path, strlen(inst->python_path));
 				PySys_SetPath(path);
-				PyMem_RawFree(path);
 			}
 #else
 			{
 				char *path;
 
-				path = talloc_strdup(NULL, inst->python_path);
+				memcpy(&path, inst->python_path, sizeof(path));
 				PySys_SetPath(path);
-				talloc_free(path);
 			}
 #endif
 		}
@@ -1019,7 +1088,13 @@ static int mod_detach(void *instance)
 		PyThreadState_Swap(main_interpreter); /* Swap to the main thread */
 		Py_Finalize();
 		dlclose(python_dlhandle);
+
+#if PY_VERSION_HEX > 0x03050000
+		if (inst->wide_name) PyMem_RawFree(inst->wide_name);
+		if (inst->wide_path) PyMem_RawFree(inst->wide_path);
+#endif
 	}
+
 
 	return ret;
 }
