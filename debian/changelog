@@ -1,16 +1,3 @@
-freeradius (3.0.12-ppa2~yakkety) yakkety; urgency=medium
-
-  * Build fix (yakkety): libjson-c-dev instead of libjson-c2
-
- -- Fajar A. Nugraha <ubuntu-ppa@fajar.net>  Sat, 03 Dec 2016 11:35:00 +0700
-
-freeradius (3.0.12-ppa1~trusty) trusty; urgency=medium
-
-  * Updated changelog for ppa
-  * cherry-pick e5cce05
-
- -- Fajar A. Nugraha <ubuntu-ppa@fajar.net>  Sat, 03 Dec 2016 10:35:00 +0700
-
 freeradius (3.0.12+git) unstable; urgency=medium
 
   * New upstream version.
